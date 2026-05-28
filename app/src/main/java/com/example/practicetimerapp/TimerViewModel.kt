@@ -60,8 +60,22 @@ class TimerViewModel : ViewModel() {
             return String.format(Locale.JAPANESE, "%02d:%02d", minutes, seconds)
         }
 
+    // カウントダウン or 一時停止を切り替える処理
+    fun startOrPauseTimer() {
+        when (state) {
+            TimerState.STOPPED, TimerState.PAUSED -> {  // 一時停止 or 停止のときはカウント開始
+                countDown()
+            }
+
+            TimerState.RUNNING -> { // カウント中なら一時停止
+                // 一時停止にする(countDownのループ終了条件になる)
+                state = TimerState.PAUSED
+            }
+        }
+    }
+
     // カウントダウン
-    fun countDown() {
+    private fun countDown() {
         // 起動中のタイマーがあれば停止する
         timer?.cancel()
         // 実行中に変更
@@ -84,6 +98,10 @@ class TimerViewModel : ViewModel() {
 
     // タイマーリセット
     fun resetTimer() {
+        state = TimerState.STOPPED
+        // 起動中のタイマーがあれば停止する
+        timer?.cancel()
+        timer = null
         // 各データを初期化する
         totalTime = initTime
         timeLeft = initTime
