@@ -35,6 +35,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.lifecycle.viewmodel.compose.viewModel
+import android.media.MediaPlayer
+import android.media.RingtoneManager
+import android.view.inputmethod.TextBoundsInfo
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalContext
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,6 +72,11 @@ fun Main() {
         ) {
             TimerViewModel(viewModel)   // タイマー部
         }
+    }
+
+    // メッセージ通知処理
+    if (viewModel.finish) {
+        FinishDialog(viewModel)
     }
 
 }
@@ -145,7 +157,42 @@ fun BottomView(viewModel: TimerViewModel) {
             )
         }
     }
-}   // BottomView finish
+}   // BottomView finish1
+
+// 完了時に表示するダイアログ
+@Composable
+fun FinishDialog(
+    viewModel: TimerViewModel
+) {
+    val context = LocalContext.current
+
+    DisposableEffect(Unit) {
+        // 通知音のURIを取得
+        val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        val mediaPlayer = MediaPlayer.create(context, uri).apply {
+            isLooping = true    // ループ再生
+            start()
+        }
+
+        onDispose {
+            // ダイアログを閉じたら停止＆解放
+            mediaPlayer.stop()
+            mediaPlayer.release()
+        }
+    }
+
+    // シンプルなメッセージを表示するダイアログ
+    AlertDialog(
+        title = {Text("タイマー終了")},
+        text = {Text("時間が来ました！")},
+        onDismissRequest = {viewModel.applyFinish()},
+        confirmButton = {
+            TextButton(onClick = {viewModel.applyFinish()}) {
+                Text("OK")
+            }
+        }
+    )
+}
 
 
 

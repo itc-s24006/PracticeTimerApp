@@ -44,6 +44,11 @@ class TimerViewModel : ViewModel() {
     // 進捗状況を表すカスタムゲッター
     val progress get() = timeLeft / totalTime.toFloat()
 
+    // 終了状態
+    var finish by mutableStateOf(false)
+        private set
+
+
     // 残り時間を導出するカスタムゲッター
     val timeLeftText: String
         get() {
@@ -92,6 +97,8 @@ class TimerViewModel : ViewModel() {
             if (timeLeft <= 0) {
                 timeLeft = 0
                 state = TimerState.STOPPED
+                // 完了フラグon
+                finish = true
             }
         }   // launch finish
     }   // countDown finish
@@ -105,5 +112,11 @@ class TimerViewModel : ViewModel() {
         // 各データを初期化する
         totalTime = initTime
         timeLeft = initTime
+    }
+
+    // カウントダウン終了からの復帰
+    fun applyFinish() {
+        timeLeft = totalTime
+        finish = false
     }
 }   // TimerViewModel finish
