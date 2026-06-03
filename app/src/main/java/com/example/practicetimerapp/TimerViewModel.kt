@@ -10,6 +10,11 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import android.content.Context
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.flow.first
 
 // タイマー状態を表すenum
 enum class TimerState {
@@ -17,6 +22,13 @@ enum class TimerState {
     RUNNING,
     PAUSED  // 一時停止状態
 }
+
+
+// DataStoreを利用するための拡張関数
+private val Context.dataStore by preferencesDataStore(name = "settings")
+
+// DataStore
+private val totalTimerKey = longPreferencesKey("total_time")
 
 class TimerViewModel : ViewModel() {
 
@@ -41,6 +53,12 @@ class TimerViewModel : ViewModel() {
      */
     val isRunning get() = state == TimerState.RUNNING
 
+    // +1分が可能か判定するカスタムゲッタ(残り時間が59分以下のときtrue)
+    val canPlus1 get() = timeLeft  <= 60_000L * 59
+
+    // -1分が可能か判定するカスタムゲッタ(残り1時間以上ならtrue)
+    val canMinus1 get() = timeLeft > 60_000L
+
     // 進捗状況を表すカスタムゲッター
     val progress get() = timeLeft / totalTime.toFloat()
 
@@ -64,6 +82,18 @@ class TimerViewModel : ViewModel() {
             val minutes = (totalTime / 1000) / 60
             return String.format(Locale.JAPANESE, "%02d:%02d", minutes, seconds)
         }
+
+    // +1 minute
+    fun plus1() {
+        timeLeft += 60_000L
+        totalTime += 60_000L
+    }
+
+    // -1 minute
+    fun minus1(){
+        timeLeft -= 60_000L
+        totalTime -= 60_000L
+    }
 
     // カウントダウン or 一時停止を切り替える処理
     fun startOrPauseTimer() {
@@ -119,4 +149,26 @@ class TimerViewModel : ViewModel() {
         timeLeft = totalTime
         finish = false
     }
+
+    // DataStoreにカウント時間を保存し、初期値も更新する
+    fun saveTotalTime(context: Context) {
+        viewModelScope.launch{
+            context.dataStore.edit { preferences ->
+                preferences[totalTimerKey] = totalTime
+                initTime = totalTime
+            }
+        }
+    }
+
+    // DataStoreから初期値を復元し、その後全体をリセットする
+    fun loadTotalTime(context: Context) {
+        viewModelScope.launch {
+            val preferences = context.dataStore.data.first()
+            val restored = preferences[totalTimerKey] ?: initTime   // 値がないときは初期値を使う
+            initTime = restored
+            resetTimer()
+
+        }
+    }
+
 }   // TimerViewModel finish

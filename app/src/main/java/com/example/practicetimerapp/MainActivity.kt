@@ -42,6 +42,11 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.material3.VerticalDivider
+import androidx.compose.ui.draw.shadow
+import android.widget.Toast
+import androidx.compose.ui.graphics.vector.DefaultTrimPathStart
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -130,6 +135,8 @@ fun TimerViewModel(viewModel: TimerViewModel) {
 // 画面下部のボタンリスト
 @Composable
 fun BottomView(viewModel: TimerViewModel) {
+    val context = LocalContext.current
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -138,6 +145,36 @@ fun BottomView(viewModel: TimerViewModel) {
             .padding(16.dp),
         horizontalArrangement = Arrangement.Center
     ) {
+        // +1 button
+        FilledIconButton(
+            onClick = { viewModel.plus1() },
+            enabled = viewModel.canPlus1
+        ) {
+            Icon(
+                imageVector = ImageVector.vectorResource(id = R.drawable.img_plus_1),
+                contentDescription = "+1"
+            )
+        }
+
+        // -1 button
+        FilledIconButton(
+            onClick = { viewModel.minus1() },
+            enabled = viewModel.canMinus1
+        ) {
+            Icon(
+                imageVector = ImageVector.vectorResource(id = R.drawable.img_minus_1),
+                contentDescription = "-1"
+            )
+        }
+
+        // 仕切り線
+        VerticalDivider(
+            modifier = Modifier
+                .fillMaxHeight()
+                .padding(4.dp),
+            thickness = 2.dp
+        )
+
         FilledIconButton(   // スタート・ポーズ
             onClick = { viewModel.startOrPauseTimer() },
         ) {
@@ -154,6 +191,34 @@ fun BottomView(viewModel: TimerViewModel) {
             Icon(
                 imageVector = ImageVector.vectorResource(id = R.drawable.img_reset),
                 contentDescription = "reset"
+            )
+        }
+        VerticalDivider(
+            modifier = Modifier
+                .fillMaxHeight()
+                .padding(4.dp),
+            thickness = 2.dp,
+        )
+        FilledIconButton(
+            onClick = {
+                viewModel.saveTotalTime(context)
+                Toast.makeText(context, "設定を保存しました。", Toast.LENGTH_LONG).show()
+            },
+        ) {
+            Icon(
+                imageVector = ImageVector.vectorResource(id = R.drawable.img_save),
+                contentDescription = "save"
+            )
+        }
+        FilledIconButton(
+            onClick = {
+                viewModel.loadTotalTime(context)
+                Toast.makeText(context, "設定を復元しました。", Toast.LENGTH_LONG).show()
+            },
+        ) {
+            Icon(
+                imageVector = ImageVector.vectorResource(id = R.drawable.img_load),
+                contentDescription = "load"
             )
         }
     }
